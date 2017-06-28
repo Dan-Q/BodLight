@@ -24,7 +24,7 @@ firebaseAuth = ()=>{
 
 let identity;
 let screenData, screenDisplayData, screenDisplayTemplateName;
-let vueApp, vueData = { screenData: null, screenDisplayData: null };
+let vueApp, vueScreenData = { screenData: null, screenDisplayData: null };
 
 // Updates the current Screen's 'lastSeen' and 'resolution'. Run periodically.
 updateScreenLastSeenAt = ()=>{
@@ -33,14 +33,15 @@ updateScreenLastSeenAt = ()=>{
     resolution: {
       height: window.innerHeight,
       width: window.innerWidth
-    }
+    },
+    version: electron.remote.app.getVersion()
   });
 }
 
 // Called with a Firebase Database snapshot when a Screen's Display data changes.
 updateScreenDisplay = (snapshot)=>{
   screenDisplayData = snapshot.val();
-  vueData.screenDisplayData = screenDisplayData;
+  vueScreenData.screenDisplayData = screenDisplayData;
   if((screenDisplayData === null) || typeof(screenDisplayData['template']) === 'undefined') return;
   if(screenDisplayTemplateName !== screenDisplayData['template']){
     // template has changed - re-render
@@ -50,7 +51,7 @@ updateScreenDisplay = (snapshot)=>{
     // connect Vue
     vueApp = new Vue({
       el: `#app-${wrapperId}`,
-      data: vueData
+      data: vueScreenData
     });
   }
 }
@@ -68,7 +69,8 @@ updateScreen = (snapshot)=>{
       db.ref(`displays/${newScreenData['display']}`).on('value', updateScreenDisplay);
     }
   }
-  vueData.screenData = screenData = newScreenData;
+  $('body').toggle((typeof(newScreenData['display']) !== 'undefined') && (newScreenData['display'] !== '')); // hide screen contents if no display defined
+  vueScreenData.screenData = screenData = newScreenData;
 }
 
 // Launches a Screen based on the settings.
@@ -84,8 +86,10 @@ launchScreen = ()=>{
   }).then(()=>{
     let user = firebase.auth().currentUser;
     if(user === null) return errorScreen('Invalid username/password.');
+    // fix title
+    document.title = `BodLight | ${identity} | v${electron.remote.app.getVersion()}`;
     // set up last-seen-at updater
-    updateScreenLastSeenAt();
+    setTimeout(updateScreenLastSeenAt, 2000); // 2 seconds - an 'early' re-hit to make sure the resolution is set correctly even if fullscreenifying is slow
     setInterval(updateScreenLastSeenAt, 30000); // 30 seconds
     // Fullscreenify and remove not-for-screens CSS
     $('.not-for-screens').remove();
@@ -110,15 +114,29 @@ errorScreen = (msg)=>{
 }
 
 /********************************************************************************
+ * Tab Groups                                                                   *
+ ********************************************************************************/
+
+$('body').on('click touchend', '.tab-item', function(){
+  $(this).closest('.tab-group').find('.tab-item').removeClass('active');
+  $(this).addClass('active');
+  let area = $(`#${$(this).data('tab-area-id')}`);
+  area.closest('.tab-area').find('.tab-area-section').removeClass('active');
+  area.addClass('active');
+});
+$('.tab-group .tab-item:first').click();
+
+/********************************************************************************
  * Start Page                                                                   *
  ********************************************************************************/
+
 if($('body').hasClass('start-page')){
   // Load any saved settings, save settings in real-time
   $('input').each(function(){
     if($(this).is(':checkbox')){
-      $(this).prop('checked', settings.get(`settings.${$(this).attr('id')}`, ''));
+      $(this).prop('checked', settings.get(`settings.${$(this).attr('id')}`, false));
     } else {
-      $(this).val(settings.get(`settings.${$(this).attr('id')}`, false));
+      $(this).val(settings.get(`settings.${$(this).attr('id')}`, ''));
     }
   }).on('change click', function(){
     if($(this).is(':checkbox')){
@@ -139,8 +157,7 @@ if($('body').hasClass('start-page')){
 
   // Handle button clicks
   $('.editor-login').on('click touchend', ()=>{
-    // TODO
-    alert('editor login');
+    window.location.href = 'editor.html';
     return false;
   });
   $('.screen-login').on('click touchend', ()=>{
@@ -152,3 +169,83 @@ if($('body').hasClass('start-page')){
 /********************************************************************************
  * Editor Mode                                                                  *
  ********************************************************************************/
+
+let vueEditorData = { screens: {}, displays: {}, serverTime: 0, selectedScreen: null, selectedDisplay: null };
+let serverTimeOffset = 0;
+let templates = {};
+
+setServerTimeOffset = ()=>{
+  db.ref("/.info/serverTimeOffset").on('value', function(offset) {
+    serverTimeOffset = offset.val() || 0;
+  });
+}
+
+serverTime = ()=>{
+  return Date.now() + serverTimeOffset;
+}
+
+loadTemplates = ()=>{
+  templates = {};
+  fs.readdirSync('templates').forEach((template)=> {
+    templates[template] = {
+      form: fs.readFileSync(`templates/${template}/form.html`, { encoding: 'utf-8' }),
+      formJs: fs.readFileSync(`templates/${template}/form.js`, { encoding: 'utf-8' }),
+    }
+  })
+}
+
+if($('body').hasClass('editor-page')){
+  // connect Firebase
+  firebaseAuth().catch((error) => {
+    firebase.auth().signOut(); // force signout to ensure any old sessions are killed
+    window.location.href = 'start.html';
+  }).then(()=>{
+    let user = firebase.auth().currentUser;
+    if(user === null) return (window.location.href = 'start.html');
+    // fix title
+    document.title = `BodLight | Editor | v${electron.remote.app.getVersion()}`;
+    // preload templates
+    loadTemplates();
+    // monitor Firebase database
+    db.ref('/').on('value', (snapshot)=>{
+      let data = snapshot.val();
+      vueEditorData.screens = data.screens;
+      vueEditorData.displays = data.displays;
+      vueEditorData.serverTime = serverTime();
+    });
+    // watch the clock
+    setInterval(()=>{
+      vueEditorData.serverTime = serverTime();
+    }, 1000);
+    // allow clicking on screens/displays tables
+    $('body').on('click touchend', '#screens-table tr', function(){
+      vueEditorData.selectedScreen = $(this).find('td:first').text().trim();
+      $('#selected-screen [data-field-id]').each(function(){
+        $(this).val(vueEditorData.screens[vueEditorData.selectedScreen][$(this).data('field-id')]);
+      });
+    });
+    $('body').on('click touchend', '#displays-table tr', function(){
+      vueEditorData.selectedDisplay = $(this).find('td:first').text().trim();
+      let display = vueEditorData.displays[vueEditorData.selectedDisplay];
+      let template = templates[display.template];
+      $('#selected-display-form').html(template.form).data('return-json', null);
+      eval(template.formJs);
+    });
+    // allow saving edited screens
+    $('body').on('click touchend', '#selected-screen .save', function(){
+      let params = {};
+      $('#selected-screen [data-field-id]').each(function(){ params[$(this).data('field-id')] = $(this).val(); });
+      db.ref(`screens/${vueEditorData.selectedScreen}`).update(params);
+    });
+    // allow saving edited displays
+    $('body').on('click touchend', '#selected-display .save', function(){
+      db.ref(`displays/${vueEditorData.selectedDisplay}`).update($('#selected-display-form').data('return-json'));
+    });
+
+    // connect Vue
+    vueApp = new Vue({
+      el: '#editor',
+      data: vueEditorData
+    });
+  });
+}

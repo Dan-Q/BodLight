@@ -1,0 +1,43 @@
+/* General */
+
+.tab-area-section {
+  display: none !important;
+}
+
+.tab-area-section.active {
+  display: inherit !important;
+}
+
+/* Start Page */
+
+.start-page .pane {
+  margin: 5px 25px;
+}
+
+.start-page form {
+  display: grid;
+  grid-template: 1fr 1fr / 1fr 1fr;
+}
+
+.start-page .password-section {
+  margin: 0 auto;
+  max-width: 600px;
+  grid-column: 1 / span 2;
+}
+
+.start-page label {
+  font-weight: bold;
+}
+
+/* Editor Page */
+
+#editor-tab-screens-area,
+#editor-tab-displays-area {
+  display: grid;
+  height: 100%;
+  grid-template: 1fr 1fr / 1fr;
+}
+
+#selected-screen, #selected-display {
+  border-top: 1px solid #ddd;
+}
