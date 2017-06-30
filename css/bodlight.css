@@ -32,10 +32,11 @@
 /* Editor Page */
 
 #editor-tab-screens-area,
-#editor-tab-displays-area {
+#editor-tab-displays-area,
+#editor-tab-media-area {
   display: grid;
   height: 100%;
-  grid-template: 1fr 1fr / 1fr;
+  grid-template: 1fr 1em 1fr / 1fr;
 }
 
 #selected-screen, #selected-display {

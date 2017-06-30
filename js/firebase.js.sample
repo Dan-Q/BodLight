@@ -7,3 +7,5 @@ var config = {
   messagingSenderId: "SENDERID"
 };
 firebase.initializeApp(config);
+
+var storage = firebase.app().storage('gs://PROJECTID.appspot.com');

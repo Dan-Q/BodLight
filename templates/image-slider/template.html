@@ -1,0 +1,16 @@
+<link rel="stylesheet" type="text/css" href="../templates/image-slider/image-slider.css" />
+
+<div class="image-slider" :style="`width: ${screenDisplayData.items.length * 100}vw;`" :data-num-slides="screenDisplayData.items.length">
+  <div v-for="url in screenDisplayData.items" class="image" :style="`background-image: url(${url});`"></div>
+</div>
+
+<script type="text/javascript">
+  const VERTICAL_SLIDESHOW_AUTO_SCROLL_DELAY = 10000; // milliseconds - TODO: parameterize
+  let nowShowing = 0;
+  setInterval(function(){
+    const imageSlider = $('.image-slider');
+    const numSlides = imageSlider.data('num-slides');
+    nowShowing = (nowShowing + 1) % numSlides;
+    imageSlider.css({ left: `-${nowShowing}00vw` });
+  }, VERTICAL_SLIDESHOW_AUTO_SCROLL_DELAY);
+</script>

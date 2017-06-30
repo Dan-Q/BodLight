@@ -2,6 +2,8 @@ const electron = require('electron');
 const currentWindow = electron.remote.getCurrentWindow();
 const settings = require('electron-settings');
 const fs = require('fs');
+const path = require('path');
+const mime = require('mime');
 const Vue = require('../node_modules/vue/dist/vue.min');
 const Guid = require('guid');
 
@@ -164,13 +166,19 @@ if($('body').hasClass('start-page')){
     launchScreen();
     return false;
   });
+  $('.dev-tools').on('click touchend', ()=>{
+    currentWindow.webContents.openDevTools();
+    return false;
+  });
 }
 
 /********************************************************************************
  * Editor Mode                                                                  *
  ********************************************************************************/
 
-let vueEditorData = { screens: {}, displays: {}, serverTime: 0, selectedScreen: null, selectedDisplay: null };
+let vueEditorData = { screens: {}, displays: {}, mediaItems: {}, serverTime: 0,
+                      selectedScreen: null, selectedDisplay: null, selectedMediaItem: null
+                    };
 let serverTimeOffset = 0;
 let templates = {};
 
@@ -209,8 +217,9 @@ if($('body').hasClass('editor-page')){
     // monitor Firebase database
     db.ref('/').on('value', (snapshot)=>{
       let data = snapshot.val();
-      vueEditorData.screens = data.screens;
-      vueEditorData.displays = data.displays;
+      vueEditorData.screens = data.screens || {};
+      vueEditorData.displays = data.displays || {};
+      vueEditorData.mediaItems = data.media || {};
       vueEditorData.serverTime = serverTime();
     });
     // watch the clock
@@ -241,7 +250,25 @@ if($('body').hasClass('editor-page')){
     $('body').on('click touchend', '#selected-display .save', function(){
       db.ref(`displays/${vueEditorData.selectedDisplay}`).update($('#selected-display-form').data('return-json'));
     });
-
+    // allow adding new media items
+    $('body').on('click touchend', '#add-media', ()=>{
+      electron.remote.dialog.showOpenDialog({title: 'Select media files', buttonLabel: 'Upload', properties: ['openFile', 'multiSelections']}, (files)=>{
+        files.forEach((file)=>{
+          let shortName = path.basename(file); // TODO: use path.posix.basename on POSIX-compliant OSes? [TESTME]
+          let ref = storage.ref(`/media/${shortName}`);
+          let data = fs.readFileSync(file);
+          ref.put(data, { contentType: mime.lookup(file) }).then((snapshot)=>{
+            console.log(snapshot);
+            db.ref('/media').push({
+              name: snapshot.metadata.name,
+              url: snapshot.metadata.downloadURLs[0],
+              contentType: snapshot.metadata.contentType
+            });
+          });
+        })
+      });
+      return false;
+    })
     // connect Vue
     vueApp = new Vue({
       el: '#editor',

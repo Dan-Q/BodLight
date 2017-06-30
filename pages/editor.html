@@ -19,6 +19,9 @@
             <div class="tab-item" id="editor-tab-displays" data-tab-area-id="editor-tab-displays-area">
               Displays
             </div>
+            <div class="tab-item" id="editor-tab-media" data-tab-area-id="editor-tab-media-area">
+              Media
+            </div>
           </div>
 
           <div class="tab-area">
@@ -49,6 +52,7 @@
                   </tr>
                 </tbody>
               </table>
+              <div id="add-new-screen-form"></div>
               <div id="selected-screen" v-show="screens[selectedScreen]">
                 <h2>{{ selectedScreen }}</h2>
                 <p>
@@ -86,6 +90,7 @@
                   </tr>
                 </tbody>
               </table>
+              <div id="add-new-display-form"></div>
               <div id="selected-display" v-show="displays[selectedDisplay]">
                 <h2>{{ selectedDisplay }}</h2>
                 <div id="selected-display-form"></div>
@@ -93,9 +98,37 @@
                   <button class="save btn btn-default">Save</button>
                 </p>
               </div>
+            </div>
+
+            <div class="tab-area-section" id="editor-tab-media-area">
+              <table class="table-striped" id="media-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Type</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="mediaItem, id in mediaItems">
+                    <td>{{ id }}</td>
+                    <td>{{ mediaItem.name }}</td>
+                    <td>{{ mediaItem.contentType }}</td>
+                  </tr>
+                </tbody>
+              </table>
+              <div id="add-new-media-form">
+                <button class="btn btn-default" id="add-media">Add Media</button>
+              </div>
+              <div id="selected-mediaItem" v-show="mediaItems[selectedMediaItem]">
+                <h2>{{ selectedMediaItem }}</h2>
+                <p>
+                  <button class="save btn btn-default">Save</button>
+                </p>
               </div>
             </div>
           </div>
+        </div>
       </div>
     </div>
   </div>

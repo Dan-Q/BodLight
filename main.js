@@ -24,9 +24,6 @@ function createWindow() {
   // show window once initial load complete
   win.once('ready-to-show', win.show)
 
-  // Open the DevTools.
-  win.webContents.openDevTools();
-
   // Emitted when the window is closed.
   win.on('closed', () => {
     // Dereference the window object, usually you would store windows

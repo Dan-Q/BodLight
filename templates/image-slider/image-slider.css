@@ -1,0 +1,19 @@
+* {
+  overflow: hidden;
+}
+
+.image-slider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  display: flex;
+  transition: left 1.2s cubic-bezier(0.65, 0, 0.38, 1.27);
+}
+
+.image {
+  background-size: cover;
+  background-position: center;
+  width: 100vw;
+  height: 100vh;
+}
