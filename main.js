@@ -4,33 +4,41 @@ const {app, BrowserWindow} = require('electron');
 const path = require('path');
 const url = require('url');
 const settings = require('electron-settings');
+const fs = require('fs');
+
+// Debug (in development mode)
+const electronDebug = require('electron-debug');
+electronDebug();
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let win;
 
+// Sanity-checks
+let sanityCheckPassed = false;
+let startPage = 'pages/start.html';
+fs.access(path.join(__dirname, 'js/firebase.js'), (err)=>{
+  if(!err) return(sanityCheckPassed = true);
+  // Show a warning about what went wrong
+  startPage = 'pages/no-firebase-config.html';
+});
+
 function createWindow() {
   // Create the browser window.
-  win = new BrowserWindow({width: 1800, height: 900, show: false, icon: 'icon.ico', webPreferences: { experimentalFeatures: true }, blinkFeatures: 'CSSGridLayout'});
+  const width = (sanityCheckPassed ? 1800 : 400);
+  const height = (sanityCheckPassed ? 900 : 300);
+  win = new BrowserWindow({width: width, height: height, show: false, icon: 'icon.ico', webPreferences: { experimentalFeatures: true }, blinkFeatures: 'CSSGridLayout'});
 
   // and load the index.html of the app.
   win.loadURL(url.format({
-    pathname: path.join(__dirname, 'pages/start.html'),
+    pathname: path.join(__dirname, startPage),
     protocol: 'file:',
     slashes: true
   }));
   win.setMenu(null);
 
   // show window once initial load complete
-  win.once('ready-to-show', win.show)
-
-  // Emitted when the window is closed.
-  win.on('closed', () => {
-    // Dereference the window object, usually you would store windows
-    // in an array if your app supports multi windows, this is the time
-    // when you should delete the corresponding element.
-    win = null;
-  });
+  win.once('ready-to-show', win.show);
 }
 
 // This method will be called when Electron has finished
