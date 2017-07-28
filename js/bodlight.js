@@ -166,10 +166,6 @@ if($('body').hasClass('start-page')){
     launchScreen();
     return false;
   });
-  $('.dev-tools').on('click touchend', ()=>{
-    currentWindow.webContents.openDevTools();
-    return false;
-  });
 }
 
 /********************************************************************************
