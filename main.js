@@ -18,7 +18,7 @@ let win;
 let sanityCheckPassed = false;
 let startPage = 'pages/start.html';
 fs.access(path.join(__dirname, 'js/firebase.js'), (err)=>{
-  if(!err) return(sanityCheckPassed = true);
+  if(!err) { sanityCheckPassed = true; return; }
   // Show a warning about what went wrong
   startPage = 'pages/no-firebase-config.html';
 });
