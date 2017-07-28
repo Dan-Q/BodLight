@@ -14,24 +14,15 @@ electronDebug();
 // be closed automatically when the JavaScript object is garbage collected.
 let win;
 
-// Sanity-checks
-let sanityCheckPassed = false;
-let startPage = 'pages/start.html';
-fs.access(path.join(__dirname, 'js/firebase.js'), (err)=>{
-  if(!err) { sanityCheckPassed = true; return; }
-  // Show a warning about what went wrong
-  startPage = 'pages/no-firebase-config.html';
-});
-
-function createWindow() {
+function createWindow(sanityCheckResult, pageToLoad) {
   // Create the browser window.
-  const width = (sanityCheckPassed ? 1800 : 400);
-  const height = (sanityCheckPassed ? 900 : 300);
-  win = new BrowserWindow({width: width, height: height, show: false, icon: 'icon.ico', webPreferences: { experimentalFeatures: true }, blinkFeatures: 'CSSGridLayout'});
+  const width = (sanityCheckResult ? 1800 : 400);
+  const height = (sanityCheckResult ? 900 : 300);
+  win = new BrowserWindow({width: width, height: height, show: true, icon: 'icon.ico', webPreferences: { experimentalFeatures: true }, blinkFeatures: 'CSSGridLayout'});
 
   // and load the index.html of the app.
   win.loadURL(url.format({
-    pathname: path.join(__dirname, startPage),
+    pathname: path.join(__dirname, pageToLoad),
     protocol: 'file:',
     slashes: true
   }));
@@ -41,10 +32,18 @@ function createWindow() {
   win.once('ready-to-show', win.show);
 }
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
-app.on('ready', createWindow);
+// Sanity-checks
+fs.access('js/firebase.js', (err)=>{
+  let nextStep;
+  if(!err) {
+    console.log('sanity checks passed');
+    nextStep = ()=>{ createWindow(true, 'pages/start.html') };
+  } else {
+    console.error('js/firebase.js missing');
+    nextStep = ()=>{ createWindow(false, 'pages/no-firebase-config.html') };
+  }
+  if(app.isReady()) { nextStep(); } else { app.on('ready', nextStep); };
+});
 
 // Quit when all windows are closed.
 app.on('window-all-closed', () => {

@@ -4,7 +4,7 @@ const settings = require('electron-settings');
 const fs = require('fs');
 const path = require('path');
 const mime = require('mime');
-const Vue = require('../node_modules/vue/dist/vue.min');
+const Vue = require('vue/dist/vue.min');
 const uuidv4 = require('uuid/v4');
 
 // Default to not-full-screen; made full-screen when needed:
