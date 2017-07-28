@@ -5,7 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const mime = require('mime');
 const Vue = require('../node_modules/vue/dist/vue.min');
-const Guid = require('guid');
+const uuidv4 = require('uuid/v4');
 
 // Default to not-full-screen; made full-screen when needed:
 currentWindow.setFullScreen(false);
@@ -47,7 +47,7 @@ updateScreenDisplay = (snapshot)=>{
   if((screenDisplayData === null) || typeof(screenDisplayData['template']) === 'undefined') return;
   if(screenDisplayTemplateName !== screenDisplayData['template']){
     // template has changed - re-render
-    let wrapperId = Guid.raw();
+    let wrapperId = uuidv4();
     let template = fs.readFileSync(`templates/${screenDisplayData['template']}/template.html`, { encoding: 'utf-8' });
     $('body').html(`<div class="vue-app" id="app-${wrapperId}">${template}</div>`);
     // connect Vue
