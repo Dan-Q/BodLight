@@ -8,6 +8,12 @@ const mime = require('mime');
 const Vue = require('vue/dist/vue.min');
 const uuidv4 = require('uuid/v4');
 
+const CodeMirror = require('codemirror');
+require('codemirror/mode/javascript/javascript.js')
+require('codemirror/mode/css/css.js')
+require('codemirror/mode/xml/xml.js')
+require('codemirror/mode/htmlmixed/htmlmixed.js')
+
 // Default to not-full-screen; made full-screen when needed:
 currentWindow.setFullScreen(false);
 

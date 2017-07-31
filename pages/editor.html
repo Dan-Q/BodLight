@@ -5,6 +5,7 @@
   <title>BodLight | Editor</title>
   <link rel="stylesheet" href="../css/bodlight-universal.css" />
   <link rel="stylesheet" href="../node_modules/photonkit/dist/css/photon.css" class="not-for-screens" />
+  <link rel="stylesheet" href="../node_modules/codemirror/lib/codemirror.css" class="not-for-screens" />
   <link rel="stylesheet" href="../css/bodlight.css" class="not-for-screens" />
 </head>
 <body class="editor-page">
@@ -38,11 +39,14 @@
                 <tbody>
                   <tr v-for="screen, name in screens">
                     <td>
-                      <span v-if="(serverTime - screen.lastSeen) <= 60000">
-                        <span class="icon icon-record" style="color:#34c84a"><!-- online --></span>
+                      <span v-if="screen.simulator">
+                        <span class="icon icon-record" style="color: transparent"><!-- simulator --></span>
+                      </span>
+                      <span v-else-if="(serverTime - screen.lastSeen) <= 60000">
+                        <span class="icon icon-record" style="color: #34c84a"><!-- online --></span>
                       </span>
                       <span v-else>
-                        <span class="icon icon-record" style="color:#fc605b"><!-- offline --></span>
+                        <span class="icon icon-record" style="color: #fc605b"><!-- offline --></span>
                       </span>
                       {{ name }}
                     </td>

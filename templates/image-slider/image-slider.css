@@ -21,3 +21,29 @@ body {
   width: 100vw;
   height: 100vh;
 }
+
+/* Clock */
+
+.clock {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 10vh;
+  width: 100%;
+  background: #1a140f;
+  color: #7d807e;
+  line-height: 10vh;
+  text-align: right;
+  padding-right: 0.25em;
+  font-size: 7vh;
+  font-family: sans-serif;
+}
+
+.image-slider.with-clock {
+  top: 10vh;
+  height: 90vh;
+}
+
+.image-slider.with-clock .image {
+  height: 90vh;
+}

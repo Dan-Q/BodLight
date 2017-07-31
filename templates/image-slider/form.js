@@ -19,9 +19,12 @@ function addImageSliderTemplateListItem(url){
 // Read changes and inject into form
 updateMediaListDropdown();
 (display['items'] || []).forEach(addImageSliderTemplateListItem);
+$('#display-clock').val(display['clock']);
+$('#display-delay').val(display['delay']);
 
-// Update list and write changes to return-json data store on change
-$('.image-slider-template-list').on('change', 'select', function(){
+// Write changes to return-json data store
+window.rawTemplateWriteDataChanges = ()=>{
+  // parse image list
   let value = $(this).val();
   let isTail = $(this).closest('li').hasClass('image-slider-template-list-tail');
   if(isTail && (value != '')){
@@ -31,6 +34,17 @@ $('.image-slider-template-list').on('change', 'select', function(){
     $(this).closest('li').remove();
   }
   let items = $('.image-slider-template-list-item select').map(function(){ return $(this).val(); }).toArray();
-  $('#selected-display-form').data('return-json', { items: items });
-  console.log($('#selected-display-form').data('return-json'));
-}).last().trigger('change');
+  // write to data store
+  $('#selected-display-form').data('return-json', {
+    items: items,
+    delay: $('#display-delay').val(),
+    clock: $('#display-clock').val()
+  });
+}
+
+// Update list and write changes to return-json data store on change
+$('.image-slider-template-list').on('change', 'select', window.rawTemplateWriteDataChanges);
+$('#display-delay, #display-clock').on('change keyup click', window.rawTemplateWriteDataChanges);
+
+// Update and write now
+window.rawTemplateWriteDataChanges();
