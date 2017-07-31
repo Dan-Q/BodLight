@@ -2,6 +2,7 @@ const electron = require('electron');
 const currentWindow = electron.remote.getCurrentWindow();
 const settings = require('electron-settings');
 const fs = require('fs');
+const url = require('url');
 const path = require('path');
 const mime = require('mime');
 const Vue = require('vue/dist/vue.min');
@@ -30,6 +31,7 @@ let vueApp, vueScreenData = { screenData: null, screenDisplayData: null };
 
 // Updates the current Screen's 'lastSeen' and 'resolution'. Run periodically.
 updateScreenLastSeenAt = ()=>{
+  if(window.dontTriggerLastSeenAt) return;
   db.ref(`screens/${identity}`).update({
     lastSeen: firebase.database.ServerValue.TIMESTAMP,
     resolution: {
@@ -73,6 +75,8 @@ updateScreen = (snapshot)=>{
   }
   $('body').toggle((typeof(newScreenData['display']) !== 'undefined') && (newScreenData['display'] !== '')); // hide screen contents if no display defined
   vueScreenData.screenData = screenData = newScreenData;
+  // if a (simulator) zoomLevel is set, apply
+  if(window.zoomLevel) $('body').css('zoom', window.zoomLevel);
 }
 
 // Launches a Screen based on the settings.
@@ -95,7 +99,7 @@ launchScreen = ()=>{
     setInterval(updateScreenLastSeenAt, 30000); // 30 seconds
     // Fullscreenify and remove not-for-screens CSS
     $('.not-for-screens').remove();
-    currentWindow.setFullScreen(true);
+    if(!window.dontAutoFullscreen) currentWindow.setFullScreen(true);
     // Watch for changes...
     db.ref(`screens/${identity}`).on('value', updateScreen);
   });
@@ -148,6 +152,19 @@ if($('body').hasClass('start-page')){
     }
   });
 
+  // Get version details if possible
+  const versionDetailsWrapper = $('#version-details');
+  const currentVersion = electron.remote.app.getVersion().trim();
+  versionDetailsWrapper.text(`Version: ${currentVersion}`);
+  if(updateUrl){
+    $.get(`${updateUrl}?cachebuster=${(new Date()).getTime()}`, (latestVersion)=>{
+      latestVersion = latestVersion.trim();
+      let vString = `Version: ${electron.remote.app.getVersion()} | Latest: ${latestVersion}`;
+      if(latestVersion != currentVersion) vString += '| UPDATE AVAILABLE';
+      versionDetailsWrapper.text(vString);
+    });
+  }
+
   // If set to auto launch as a screen, do so in 3 seconds (if not unchecked)
   if($('#auto-launch-screen').is(':checked')){
     setTimeout(()=>{
@@ -166,6 +183,19 @@ if($('body').hasClass('start-page')){
     launchScreen();
     return false;
   });
+}
+
+/********************************************************************************
+ * Screen Simulator Loader                                                      *
+ ********************************************************************************/
+
+if($('body').hasClass('screen-simulator')){
+  let params = JSON.parse(window.location.hash.substr(1));
+  settings.set('settings.screen-identity', params.screenIdentity);
+  window.zoomLevel = params.zoom;
+  window.dontAutoFullscreen = true;
+  window.dontTriggerLastSeenAt = true;
+  launchScreen();
 }
 
 /********************************************************************************
@@ -223,13 +253,13 @@ if($('body').hasClass('editor-page')){
       vueEditorData.serverTime = serverTime();
     }, 1000);
     // allow clicking on screens/displays tables
-    $('body').on('click touchend', '#screens-table tr', function(){
+    $('body').on('click', '#screens-table tr', function(){
       vueEditorData.selectedScreen = $(this).find('td:first').text().trim();
       $('#selected-screen [data-field-id]').each(function(){
         $(this).val(vueEditorData.screens[vueEditorData.selectedScreen][$(this).data('field-id')]);
       });
     });
-    $('body').on('click touchend', '#displays-table tr', function(){
+    $('body').on('click', '#displays-table tr', function(){
       vueEditorData.selectedDisplay = $(this).find('td:first').text().trim();
       let display = vueEditorData.displays[vueEditorData.selectedDisplay];
       let template = templates[display.template];
@@ -237,17 +267,43 @@ if($('body').hasClass('editor-page')){
       eval(template.formJs);
     });
     // allow saving edited screens
-    $('body').on('click touchend', '#selected-screen .save', function(){
+    $('body').on('click', '#selected-screen .save', function(){
       let params = {};
       $('#selected-screen [data-field-id]').each(function(){ params[$(this).data('field-id')] = $(this).val(); });
       db.ref(`screens/${vueEditorData.selectedScreen}`).update(params);
     });
+    // allow screen simulation
+    $('body').on('click', '#selected-screen .simulate', function(){
+      const screenToSimulate = vueEditorData.screens[vueEditorData.selectedScreen];
+      // determine an appropriate target width and height to simulate
+      const effectiveScreenWidth = (screen.width - 100);
+      const effectiveScreenHeight = (screen.height - 100);
+      const effectiveScreenRatio = effectiveScreenWidth / effectiveScreenHeight;
+      let targetWidth = screenToSimulate.resolution.width;
+      let targetHeight = screenToSimulate.resolution.height;
+      // TODO/HACK: improve me: this lazy approach is awful; I have the ratio of the effective screen space, I should be able to resize better and without a loop
+      while((targetWidth > effectiveScreenWidth) || (targetHeight > effectiveScreenHeight)){
+        targetWidth = targetWidth * 0.9;
+        targetHeight = targetHeight * 0.9;
+      }
+      // determine zoom level for proposed window size
+      const zoomLevel = targetWidth / screenToSimulate.resolution.width;
+      // launch simulator
+      let simulator = new electron.remote.BrowserWindow({width: Math.round(targetWidth), height: Math.round(targetHeight), icon: 'icon.ico', webPreferences: { experimentalFeatures: true }, blinkFeatures: 'CSSGridLayout'});
+      simulator.setMenu(null);
+      simulator.loadURL(url.format({
+        pathname: path.join(__dirname, 'screen-simulator.html'),
+        hash: JSON.stringify({ screenIdentity: vueEditorData.selectedScreen, zoom: zoomLevel }),
+        protocol: 'file:',
+        slashes: true
+      }));
+    });
     // allow saving edited displays
-    $('body').on('click touchend', '#selected-display .save', function(){
+    $('body').on('click', '#selected-display .save', function(){
       db.ref(`displays/${vueEditorData.selectedDisplay}`).update($('#selected-display-form').data('return-json'));
     });
     // allow adding new media items
-    $('body').on('click touchend', '#add-media', ()=>{
+    $('body').on('click', '#add-media', ()=>{
       electron.remote.dialog.showOpenDialog({title: 'Select media files', buttonLabel: 'Upload', properties: ['openFile', 'multiSelections']}, (files)=>{
         files.forEach((file)=>{
           let shortName = path.basename(file); // TODO: use path.posix.basename on POSIX-compliant OSes? [TESTME]

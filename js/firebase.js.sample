@@ -1,4 +1,4 @@
-var config = {
+const firebaseConfig = {
   apiKey: "APIKEY",
   authDomain: "PROJECTID.firebaseapp.com",
   databaseURL: "https://PROJECTID.firebaseio.com",
@@ -6,6 +6,8 @@ var config = {
   storageBucket: "",
   messagingSenderId: "SENDERID"
 };
-firebase.initializeApp(config);
+firebase.initializeApp(firebaseConfig);
 
-var storage = firebase.app().storage('gs://PROJECTID.appspot.com');
+const storage = firebase.app().storage('gs://PROJECTID.appspot.com');
+
+const updateUrl = false; // set to a string with version updates

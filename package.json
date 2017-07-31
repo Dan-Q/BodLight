@@ -1,10 +1,12 @@
 {
   "name": "BodLight",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-packager --platform=all . BodLight --overwrite --out=build"
+    "build": "rm -rf build/*; electron-packager --platform=darwin,linux,win32 . BodLight --overwrite --out=build",
+    "package": "node -e \"var fs = require('fs'); var json = JSON.parse(fs.readFileSync('package.json')); console.log(json.version)\" > build/version; cd build; rm *.zip; for D in *; do if [ -d \"${D}\" ]; then echo \"${D}\";zip -q1r \"${D}.zip\" \"${D}\"; fi; done; cd ..",
+    "deploy": "scp build/*.zip bodl2255@www-prd.bodleian.ox.ac.uk:bodlight/; scp build/version bodl2255@www-prd.bodleian.ox.ac.uk:bodlight/"
   },
   "devDependencies": {
     "devtron": "^1.4.0",

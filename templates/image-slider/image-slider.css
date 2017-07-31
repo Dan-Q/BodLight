@@ -2,6 +2,10 @@
   overflow: hidden;
 }
 
+body {
+  zoom: 1 !important; /* zoom simulation not required; this template uses dynamic sizing */
+}
+
 .image-slider {
   position: absolute;
   top: 0;
