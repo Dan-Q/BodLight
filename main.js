@@ -33,7 +33,7 @@ function createWindow(sanityCheckResult, pageToLoad) {
 }
 
 // Sanity-checks
-fs.access('js/firebase.js', (err)=>{
+fs.access(path.join(__dirname, 'js/firebase.js'), (err)=>{
   let nextStep;
   if(!err) {
     console.log('sanity checks passed');
