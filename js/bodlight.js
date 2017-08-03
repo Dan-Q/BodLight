@@ -42,6 +42,11 @@ let identity;
 let screenData, screenDisplayData, screenDisplayTemplateName;
 let vueApp, vueScreenData = { screenData: null, screenDisplayData: null };
 
+// Convenience function for expanding template directory paths
+templatePath = (templateName)=>{
+  return path.join(__dirname, `../templates/${templateName}`);
+}
+
 // Updates the current Screen's 'lastSeen' and 'resolution'. Run periodically.
 updateScreenLastSeenAt = ()=>{
   if(window.isSimulator) return;
@@ -63,7 +68,7 @@ updateScreenDisplay = (snapshot)=>{
   if(screenDisplayTemplateName !== screenDisplayData['template']){
     // template has changed - re-render
     let wrapperId = uuidv4();
-    let template = fs.readFileSync(`templates/${screenDisplayData['template']}/template.html`, { encoding: 'utf-8' });
+    let template = fs.readFileSync(`${templatePath(screenDisplayData['template'])}/template.html`, { encoding: 'utf-8' });
     $('body').html(`<div class="vue-app" id="app-${wrapperId}">${template}</div>`);
     // connect Vue
     vueApp = new Vue({
@@ -95,6 +100,7 @@ updateScreen = (snapshot)=>{
     if(newScreenData.cmd.cmd == 'reload'){
       // command: reload
       window.location.reload();
+      // TODO: make this smarter when not in simulator mode - right now it's almost the same as 'restart'
     } else if(newScreenData.cmd.cmd == 'restart'){
       // command: reboot
       if(window.isSimulator) {
@@ -278,8 +284,8 @@ loadTemplates = ()=>{
   templates = {};
   fs.readdirSync('templates').forEach((template)=> {
     templates[template] = {
-      form: fs.readFileSync(`templates/${template}/form.html`, { encoding: 'utf-8' }),
-      formJs: fs.readFileSync(`templates/${template}/form.js`, { encoding: 'utf-8' }),
+      form: fs.readFileSync(`${templatePath(template)}/form.html`, { encoding: 'utf-8' }),
+      formJs: fs.readFileSync(`${templatePath(template)}/form.js`, { encoding: 'utf-8' }),
     }
   })
 }
