@@ -9,3 +9,10 @@ body {
 [v-cloak] {
   display: none;
 }
+
+/* Screens (universal) */
+
+.screen, .screen * {
+  cursor: none;
+  user-select: none;
+}
