@@ -11,7 +11,7 @@ const uuidv4 = require('uuid/v4');
 const exec = require('child_process').exec;
 
 // Detect Windows because some things handle it differently
-const runningWindows = /^win/.test(os.platform);
+const runningWindows = /^win/.test(os.platform());
 
 // CodeMirror (highlighting-capable text editor)
 const CodeMirror = require('codemirror');
@@ -243,9 +243,17 @@ if($('body').hasClass('start-page')){
     return false;
   });
   $('.screen-login').on('click touchend', ()=>{
-    launchScreen();
+    window.location.href = 'screen.html';
     return false;
   });
+}
+
+/********************************************************************************
+ * Screen Loader                                                                *
+ ********************************************************************************/
+
+if($('body').hasClass('screen-loader')){
+  launchScreen();
 }
 
 /********************************************************************************
