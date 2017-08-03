@@ -1,18 +1,25 @@
 const electron = require('electron');
 const currentWindow = electron.remote.getCurrentWindow();
 const settings = require('electron-settings');
+const os = require('os');
 const fs = require('fs');
 const url = require('url');
 const path = require('path');
 const mime = require('mime');
 const Vue = require('vue/dist/vue.min');
 const uuidv4 = require('uuid/v4');
+const exec = require('child_process').exec;
 
+// Detect Windows because some things handle it differently
+const runningWindows = /^win/.test(os.platform);
+
+// CodeMirror (highlighting-capable text editor)
 const CodeMirror = require('codemirror');
-require('codemirror/mode/javascript/javascript.js')
-require('codemirror/mode/css/css.js')
-require('codemirror/mode/xml/xml.js')
-require('codemirror/mode/htmlmixed/htmlmixed.js')
+require('codemirror/mode/javascript/javascript.js');
+require('codemirror/mode/css/css.js');
+require('codemirror/mode/xml/xml.js');
+require('codemirror/mode/htmlmixed/htmlmixed.js');
+CodeMirror.defaults.lineWrapping = true;
 
 // Default to not-full-screen; made full-screen when needed:
 currentWindow.setFullScreen(false);
@@ -37,7 +44,7 @@ let vueApp, vueScreenData = { screenData: null, screenDisplayData: null };
 
 // Updates the current Screen's 'lastSeen' and 'resolution'. Run periodically.
 updateScreenLastSeenAt = ()=>{
-  if(window.dontTriggerLastSeenAt) return;
+  if(window.isSimulator) return;
   db.ref(`screens/${identity}`).update({
     lastSeen: firebase.database.ServerValue.TIMESTAMP,
     resolution: {
@@ -80,6 +87,50 @@ updateScreen = (snapshot)=>{
     }
   }
   $('body').toggle((typeof(newScreenData['display']) !== 'undefined') && (newScreenData['display'] !== '')); // hide screen contents if no display defined
+  // check for commands
+  if(newScreenData.cmd && !newScreenData.cmd.handledAt){
+    // mark as handled
+    db.ref(`screens/${identity}/cmd/handledAt`).set(firebase.database.ServerValue.TIMESTAMP);
+    // resolve the command
+    if(newScreenData.cmd.cmd == 'reload'){
+      // command: reload
+      window.location.reload();
+    } else if(newScreenData.cmd.cmd == 'restart'){
+      // command: reboot
+      if(window.isSimulator) {
+        alert(`Simulator received command '${newScreenData.cmd.cmd}' (requested by ${newScreenData.cmd.by}), but this command is not followed by simulators. Ignoring.`);
+        return;
+      }
+      exec(process.argv.join(' ')) // execute the command that was used to run the app
+      electron.remote.app.quit(); // quit the current app
+    } else if(newScreenData.cmd.cmd == 'reboot'){
+      // command: reboot
+      if(window.isSimulator) {
+        alert(`Simulator received command '${newScreenData.cmd.cmd}' (requested by ${newScreenData.cmd.by}), but this command is not followed by simulators. Ignoring.`);
+        return;
+      }
+      if(runningWindows){
+        exec(`shutdown /r /t 5 /c "Reboot requested via BodLight by ${newScreenData.cmd.by}"`);
+      } else {
+        exec(`shutdown -r +1 "Reboot requested via BodLight by ${newScreenData.cmd.by}"`);
+      }
+    } else if(newScreenData.cmd.cmd == 'shut-down'){
+      // command: reboot
+      if(window.isSimulator) {
+        alert(`Simulator received command '${newScreenData.cmd.cmd}' (requested by ${newScreenData.cmd.by}), but this command is not followed by simulators. Ignoring.`);
+        return;
+      }
+      if(runningWindows){
+        exec(`shutdown /s /t 5 /c "Shut down requested via BodLight by ${newScreenData.cmd.by}"`);
+      } else {
+        exec(`shutdown -h +1 "Shut down requested via BodLight by ${newScreenData.cmd.by}"`);
+      }
+    } else {
+      // unknown command
+      if(window.isSimulator) alert(`Simulator received unknown command '${newScreenData.cmd.cmd}' (requested by ${newScreenData.cmd.by}). Ignoring.`);
+    }
+  }
+  // update cached screendata so future changes can be detected cleanly (TODO/REFACTOR: look for improved ways to watch)
   vueScreenData.screenData = screenData = newScreenData;
   // if a (simulator) zoomLevel is set, apply
   if(window.zoomLevel) $('body').css('zoom', window.zoomLevel);
@@ -105,7 +156,7 @@ launchScreen = ()=>{
     setInterval(updateScreenLastSeenAt, 30000); // 30 seconds
     // Fullscreenify and remove not-for-screens CSS
     $('.not-for-screens').remove();
-    if(!window.dontAutoFullscreen) currentWindow.setFullScreen(true);
+    if(!window.isSimulator) currentWindow.setFullScreen(true);
     // Watch for changes...
     db.ref(`screens/${identity}`).on('value', updateScreen);
   });
@@ -166,7 +217,7 @@ if($('body').hasClass('start-page')){
     $.get(`${updateUrl}?cachebuster=${(new Date()).getTime()}`, (latestVersion)=>{
       latestVersion = latestVersion.trim();
       let vString = `Version: ${electron.remote.app.getVersion()} | Latest: ${latestVersion}`;
-      if(latestVersion != currentVersion) vString += '| UPDATE AVAILABLE';
+      if(latestVersion > currentVersion) vString += ' | UPDATE AVAILABLE';
       versionDetailsWrapper.text(vString);
     });
   }
@@ -199,8 +250,7 @@ if($('body').hasClass('screen-simulator')){
   let params = JSON.parse(window.location.hash.substr(1));
   settings.set('settings.screen-identity', params.screenIdentity);
   window.zoomLevel = params.zoom;
-  window.dontAutoFullscreen = true;
-  window.dontTriggerLastSeenAt = true;
+  window.isSimulator = true;
   launchScreen();
 }
 
@@ -254,30 +304,51 @@ if($('body').hasClass('editor-page')){
       vueEditorData.mediaItems = data.media || {};
       vueEditorData.serverTime = serverTime();
     });
+
     // watch the clock
     setInterval(()=>{
       vueEditorData.serverTime = serverTime();
     }, 1000);
-    // allow clicking on screens/displays tables
+
+    // allow clicking on screens/displays/media tables
     $('body').on('click', '#screens-table tr', function(){
-      vueEditorData.selectedScreen = $(this).find('td:first').text().trim();
+      vueEditorData.selectedScreen = $(this).data('id');
       $('#selected-screen [data-field-id]').each(function(){
         $(this).val(vueEditorData.screens[vueEditorData.selectedScreen][$(this).data('field-id')]);
       });
     });
     $('body').on('click', '#displays-table tr', function(){
-      vueEditorData.selectedDisplay = $(this).find('td:first').text().trim();
+      vueEditorData.selectedDisplay = $(this).data('id');
+      $('#selected-display [data-field-id]').each(function(){
+        $(this).val(vueEditorData.displays[vueEditorData.selectedDisplay][$(this).data('field-id')]);
+      });
       let display = vueEditorData.displays[vueEditorData.selectedDisplay];
       let template = templates[display.template];
       $('#selected-display-form').html(template.form).data('return-json', null);
       eval(template.formJs);
     });
+    $('body').on('click', '#media-table tr', function(){
+      vueEditorData.selectedMedia = $(this).data('id');
+      $('#selected-screen [data-field-id]').each(function(){
+        $(this).val(vueEditorData.screens[vueEditorData.selectedScreen][$(this).data('field-id')]);
+      });
+    });
+
     // allow saving edited screens
     $('body').on('click', '#selected-screen .save', function(){
       let params = {};
       $('#selected-screen [data-field-id]').each(function(){ params[$(this).data('field-id')] = $(this).val(); });
       db.ref(`screens/${vueEditorData.selectedScreen}`).update(params);
     });
+    // allow screens to be send commands
+    $('body').on('click', '#selected-screen .cmd', function(e){
+      db.ref(`screens/${vueEditorData.selectedScreen}/cmd`).set({
+        cmd: $(e.target).data('cmd'),
+        at: firebase.database.ServerValue.TIMESTAMP,
+        by: firebase.auth().currentUser.email
+      });
+    });
+
     // allow screen simulation
     $('body').on('click', '#selected-screen .simulate', function(){
       const screenToSimulate = vueEditorData.screens[vueEditorData.selectedScreen];
@@ -292,8 +363,10 @@ if($('body').hasClass('editor-page')){
         targetWidth = targetWidth * 0.9;
         targetHeight = targetHeight * 0.9;
       }
+
       // determine zoom level for proposed window size
       const zoomLevel = targetWidth / screenToSimulate.resolution.width;
+
       // launch simulator
       let simulator = new electron.remote.BrowserWindow({width: Math.round(targetWidth), height: Math.round(targetHeight), icon: 'icon.ico', webPreferences: { experimentalFeatures: true }, blinkFeatures: 'CSSGridLayout'});
       simulator.setMenu(null);
@@ -304,10 +377,14 @@ if($('body').hasClass('editor-page')){
         slashes: true
       }));
     });
+
     // allow saving edited displays
     $('body').on('click', '#selected-display .save', function(){
-      db.ref(`displays/${vueEditorData.selectedDisplay}`).update($('#selected-display-form').data('return-json'));
+      let params = $('#selected-display-form').data('return-json'); // start with custom form contents then append standard
+      $('#selected-display [data-field-id]').each(function(){ params[$(this).data('field-id')] = $(this).val(); });
+      db.ref(`displays/${vueEditorData.selectedDisplay}`).update(params);
     });
+
     // allow adding new media items
     $('body').on('click', '#add-media', ()=>{
       electron.remote.dialog.showOpenDialog({title: 'Select media files', buttonLabel: 'Upload', properties: ['openFile', 'multiSelections']}, (files)=>{
@@ -327,6 +404,7 @@ if($('body').hasClass('editor-page')){
       });
       return false;
     })
+    
     // connect Vue
     vueApp = new Vue({
       el: '#editor',

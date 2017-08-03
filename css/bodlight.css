@@ -39,6 +39,28 @@
   grid-template: 1fr 1em 1fr / 1fr;
 }
 
-#selected-screen, #selected-display {
+#selected-screen, #selected-display, #selected-mediaItem {
   border-top: 1px solid #ddd;
+  padding: 0.5em 0.25em;
+}
+
+label.inline {
+  display: grid;
+  grid-template-columns: 14em 1fr;
+  align-items: center;
+}
+
+label.inline > :first-child {
+  font-weight: bold;
+  text-align: right;
+  padding-right: 0.5em;
+}
+
+.CodeMirror {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.form-control[disabled] {
+  background: #ddd;
 }
