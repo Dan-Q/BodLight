@@ -10,13 +10,18 @@
 
 /* Start Page */
 
+.start-page .window {
+  background: #333;
+  color: #eee;
+}
+
 .start-page .pane {
   margin: 5px 25px;
 }
 
 .start-page form {
   display: grid;
-  grid-template: 1fr 1fr / 1fr 1fr;
+  grid-template: 1fr 2fr / 1fr 1fr;
 }
 
 .start-page .password-section {
@@ -27,6 +32,28 @@
 
 .start-page label {
   font-weight: bold;
+}
+
+.start-page input {
+  color: #333;
+}
+
+.lower-start-page-block {
+  border: 1px solid #eee;
+  margin: 0.5em;
+  padding: 0 1em;
+}
+
+.start-page button {
+  zoom: 1.2;
+}
+
+.start-page.autolaunch-mode .hidden-on-autolaunch {
+  display: none !important;
+}
+
+.start-page.autolaunch-mode form {
+  grid-template: 1fr / 1fr;
 }
 
 /* Editor Page */

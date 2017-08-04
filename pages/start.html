@@ -13,10 +13,9 @@
     <div class="window-content">
       <div class="pane-group">
         <div class="pane">
-          <h1>Welcome to BodLight</h1>
           <p id="version-details"></p>
           <form>
-            <div class="password-section">
+            <div class="password-section start-page-block upper-start-page-block hidden-on-autolaunch">
               <div class="form-group">
                 <label>Username</label>
                 <input id="username" type="text" class="form-control" />
@@ -27,20 +26,26 @@
               </div>
             </div>
 
-            <div class="editor-section">
-              <h2>Editor</h2>
+            <div class="editor-section start-page-block lower-start-page-block hidden-on-autolaunch">
+              <h3>Editor Mode</h3>
+              <p>
+                Use Editor Mode to manage screens and content.
+              </p>
               <button class="editor-login btn btn-large btn-default">Launch</button>
             </div>
 
-            <div class="screen-section">
-              <h2>Screen</h2>
+            <div class="screen-section start-page-block lower-start-page-block">
+              <h3 class="hidden-on-autolaunch">Screen Mode</h3>
+              <p class="hidden-on-autolaunch">
+                Use Screen Mode to configure this screen for display.
+              </p>
               <div class="form-group">
                 <label>Identity</label>
                 <input id="screen-identity" type="text" class="form-control" />
               </div>
               <div class="form-group">
                 <label>
-                  <input id="auto-launch-screen" type="checkbox" /> Automatically launch?
+                  <input id="auto-launch-screen" type="checkbox" /> Automatically launch in future?
                 </label>
               </div>
               <button class="screen-login btn btn-large btn-default">Launch</button>

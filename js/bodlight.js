@@ -228,17 +228,25 @@ if($('body').hasClass('start-page')){
     });
   }
 
-  // If set to auto launch as a screen, do so in 3 seconds (if not unchecked)
+  // If set to auto launch as a screen, hide other controls and do so in 3 seconds (if not unchecked)
   if($('#auto-launch-screen').is(':checked')){
+    $('.start-page').addClass('autolaunch-mode');
     setTimeout(()=>{
       if($('#auto-launch-screen').is(':checked')){
         $('.screen-login').click();
       }
     }, 3000);
+    // If unticked, show hidden components BUT CLEAR PASSWORD FIELD so that user must retype password to enter editor mode (prevents abuse from screen)
+    $('#auto-launch-screen').on('click change', ()=>{
+      $('.start-page').removeClass('autolaunch-mode');
+      if(!($(this).is(':checked'))) $('#password').val('').trigger('change');
+    });
   }
 
   // Handle button clicks
   $('.editor-login').on('click touchend', ()=>{
+    electron.remote.getCurrentWindow().setSize(1800, 900);
+    electron.remote.getCurrentWindow().center();
     window.location.href = 'editor.html';
     return false;
   });
@@ -253,6 +261,7 @@ if($('body').hasClass('start-page')){
  ********************************************************************************/
 
 if($('body').hasClass('screen-loader')){
+  electron.remote.getCurrentWindow().setKiosk(true);
   launchScreen();
 }
 

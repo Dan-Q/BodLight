@@ -16,8 +16,8 @@ let win;
 
 function createWindow(sanityCheckResult, pageToLoad) {
   // Create the browser window.
-  const width = (sanityCheckResult ? 1800 : 400);
-  const height = (sanityCheckResult ? 900 : 300);
+  const width = (sanityCheckResult ? 830 : 400);
+  const height = (sanityCheckResult ? 560 : 300);
   win = new BrowserWindow({width: width, height: height, show: false, icon: 'icon.ico', webPreferences: { experimentalFeatures: true }, blinkFeatures: 'CSSGridLayout'});
 
   // and load the index.html of the app.
