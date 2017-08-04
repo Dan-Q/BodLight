@@ -2,7 +2,11 @@
 
 <div id="bottom-menu-template">
   <main>
-    <section v-for="page in screenDisplayData.pages" :data-name="page.name" v-html="page.content"></section>
+    <section v-for="page in screenDisplayData.pages" :data-name="page.name">
+      <div class="page-left"></div>
+      <div class="page-content" v-html="page.content"></div>
+      <div class="page-right"></div>
+    </section>
   </main>
   <nav>
     <a v-for="page in screenDisplayData.pages" :data-name="page.name" href="#">{{ page.name }}</a>

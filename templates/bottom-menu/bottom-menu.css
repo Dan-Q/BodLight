@@ -6,18 +6,44 @@
   font-family: sans-serif;
 }
 
+/* Content */
+
 main {
-  background: radial-gradient(ellipse at center, #fefefe 0%,#dddddd 100%);
+  background: radial-gradient(ellipse at center, #fff 10%,#ddd 100%);
   padding: 2.5vw;
+  color: #333;
 }
 
 main section {
   display: none;
+  grid-template: 1fr / 1fr 10fr 1fr;
 }
 
 main section.current {
-  display: block;
+  display: grid;
 }
+
+.page-left, .page-right {
+  height: 78vh;
+}
+
+.page-left {
+  margin-right: 1vw;
+}
+
+.page-right {
+  margin-left: 1vw;
+}
+
+main h1 {
+  font-size: 5.5vh;
+  text-transform: uppercase;
+  font-weight: normal;
+  color: #555;
+  margin: 0 0 2vh;
+}
+
+/* Menu */
 
 nav {
   background: #1A140F;
