@@ -1,19 +1,20 @@
 <link rel="stylesheet" type="text/css" href="../templates/image-slider/image-slider.css" />
 
-<div class="clock" v-if="screenDisplayData.clock == '1'">
+<div :class="`clock clock-style-${screenDisplayData.clock}`" v-if="screenDisplayData.clock == '1' || screenDisplayData.clock == '2'" :data-clock="screenDisplayData.clock">
   clock
 </div>
 
-<div :class="`image-slider ${(screenDisplayData.clock == '1') ? 'with-clock' : 'without-clock'}`" :style="`width: ${screenDisplayData.items.length * 100}vw;`" :data-num-slides="screenDisplayData.items.length" :data-scroll-delay="screenDisplayData.delay">
+<div :class="`image-slider ${(screenDisplayData.clock == '1' || screenDisplayData.clock == '2') ? 'with-clock' : 'without-clock'}`" :style="`width: ${screenDisplayData.items.length * 100}vw;`" :data-num-slides="screenDisplayData.items.length" :data-scroll-delay="screenDisplayData.delay">
   <div v-for="url in screenDisplayData.items" class="image" :style="`background-image: url(${url});`"></div>
 </div>
 
 <script type="text/javascript">
-  (()=>{
+  (()=>{ $(()=>{
+    let imageSlider = $('.image-slider');
+    let clock = $('.clock');
     let scrollDelay = 10000; // milliseconds, 10,000 = default (10 seconds)
     let nowShowing = 0;
     nextSlide = ()=>{
-      const imageSlider = $('.image-slider');
       const numSlides = imageSlider.data('num-slides');
       let newScrollDelay = parseInt(imageSlider.data('scroll-delay'));
       if(newScrollDelay >= 1500) scrollDelay = newScrollDelay; // if specified new scroll delay valid, use it
@@ -22,7 +23,30 @@
       if(window.sliderTimeout) clearInterval(window.sliderTimeout);
       window.sliderTimeout = setTimeout(nextSlide, scrollDelay);
     }
+    updateClock = ()=>{
+      const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+      let now = new Date();
+      if(clock.data('clock') == 1){
+        // time clock
+        // universal:
+        let minutes = now.getMinutes();
+        if(minutes < 10) minutes = `0${minutes}`;
+        // 12-hour clock:
+        //let hours12 = ((now.getHours() - 1) % 12) + 1;
+        //let amPm = ((now.getHours() < 12) ? 'am' : 'pm');
+        //clock.text(`${hours12}.${minutes}${amPm}`);
+        // 24-hour clock:
+        let hours24 = now.getHours();
+        if(hours24 < 10) hours24 = `0${hours24}`;
+        clock.text(`${hours24}:${minutes}`);
+      } else if(clock.data('clock') == 2){
+        // date clock
+        clock.text(`${now.getDate()} ${months[now.getMonth()]}`);
+      }
+      setTimeout(updateClock, 10000); // 10 seconds is sufficient granularity by far, as we only care about dates/hours/minutes and not about seconds
+    }
+    if(clock.length == 1) updateClock();
     if(window.sliderTimeout) clearInterval(window.sliderTimeout); // kill any previous slider
     window.sliderTimeout = setTimeout(nextSlide, scrollDelay);
-  })();
+  }); })();
 </script>

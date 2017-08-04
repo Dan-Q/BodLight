@@ -12,7 +12,13 @@ body {
 
 /* Screens (universal) */
 
-.screen, .screen * {
+.screen,
+.screen * {
   cursor: none;
   user-select: none;
+}
+
+.screen.simulator,
+.screen.simulator * {
+  cursor: default;
 }

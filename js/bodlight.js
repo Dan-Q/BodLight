@@ -162,7 +162,11 @@ launchScreen = ()=>{
     setInterval(updateScreenLastSeenAt, 30000); // 30 seconds
     // Fullscreenify and remove not-for-screens CSS
     $('.not-for-screens').remove();
-    if(!window.isSimulator) currentWindow.setFullScreen(true);
+    if(window.isSimulator){
+      $('body').addClass('simulator')
+    } else {
+      currentWindow.setFullScreen(true);
+    }
     // Watch for changes...
     db.ref(`screens/${identity}`).on('value', updateScreen);
   });
@@ -348,7 +352,7 @@ if($('body').hasClass('editor-page')){
       let display = vueEditorData.displays[vueEditorData.selectedDisplay];
       let template = templates[display.template];
       $('#selected-display-form').html(template.form).data('return-json', null);
-      eval(template.formJs);
+      setTimeout(()=>{ eval(template.formJs); }, 100);
     });
     $('body').on('click', '#media-table tr', function(){
       vueEditorData.selectedMedia = $(this).data('id');
@@ -386,9 +390,12 @@ if($('body').hasClass('editor-page')){
         targetWidth = targetWidth * 0.9;
         targetHeight = targetHeight * 0.9;
       }
-
       // determine zoom level for proposed window size
       const zoomLevel = targetWidth / screenToSimulate.resolution.width;
+      // make target window size SLIGHTLY larger by approximately the width of the chrome
+      targetHeight += (window.outerHeight - window.innerHeight); // add to the height the anticipated width of the frame
+      targetWidth += (window.outerWidth - window.innerWidth); // add to the width the anticipated width of the frame
+
 
       // launch simulator
       let simulator = new electron.remote.BrowserWindow({width: Math.round(targetWidth), height: Math.round(targetHeight), icon: 'icon.ico', webPreferences: { experimentalFeatures: true }, blinkFeatures: 'CSSGridLayout'});

@@ -1,0 +1,23 @@
+<link rel="stylesheet" type="text/css" href="../templates/bottom-menu/bottom-menu.css" />
+
+<div id="bottom-menu-template">
+  <main>
+    <section v-for="page in screenDisplayData.pages" :data-name="page.name" v-html="page.content"></section>
+  </main>
+  <nav>
+    <a v-for="page in screenDisplayData.pages" :data-name="page.name" href="#">{{ page.name }}</a>
+  </nav>  
+</div>
+
+<script type="text/javascript">
+  (()=>{ $(()=>{
+    // main menu
+    $('#bottom-menu-template nav a').on('click', function(){
+      const name = $(this).data('name');
+      $(this).closest('nav').find('a').removeClass('current');
+      $(this).addClass('current');
+      $('#bottom-menu-template main section').removeClass('current').filter(function(){ return $(this).data('name') == name; }).addClass('current');
+      return false;
+    }).first().trigger('click');
+  }); })();
+</script>

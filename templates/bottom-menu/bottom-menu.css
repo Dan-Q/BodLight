@@ -1,0 +1,43 @@
+#bottom-menu-template {
+  width: 1920px;
+  height: 1080px;
+  display: grid;
+  grid-template: 9fr 1fr / 1fr;
+  font-family: sans-serif;
+}
+
+main {
+  background: radial-gradient(ellipse at center, #fefefe 0%,#dddddd 100%);
+  padding: 2.5vw;
+}
+
+main section {
+  display: none;
+}
+
+main section.current {
+  display: block;
+}
+
+nav {
+  background: #1A140F;
+  display: flex;
+}
+
+nav a {
+  color: #555;
+  text-align: center;
+  flex-grow: 1;
+  text-transform: uppercase;
+  text-decoration: none;
+  font-size: 3.5vh;
+  line-height: 9vh;
+  padding: 1vh 0;
+  border-bottom: 1vh solid transparent;
+}
+
+nav a.current {
+  color: #ccc;
+  border-bottom-color: #7D141E;
+  background: #2B1C10;
+}
