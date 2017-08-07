@@ -43,6 +43,7 @@ $('#bottom-menu-template-form-add-page').on('click', ()=>{
 // remove a page
 $('.bottom-menu-template-form-pages').on('click', '.bottom-menu-template-form-delete-page', function(){
   $(this).closest('tr').remove();
+  window.rawTemplateWriteDataChanges();
 });
 
 // move up/down a page

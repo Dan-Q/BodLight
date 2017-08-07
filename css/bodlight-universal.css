@@ -16,6 +16,7 @@ body {
 .screen * {
   cursor: none;
   user-select: none;
+  -webkit-user-select: none;
 }
 
 .screen.simulator,

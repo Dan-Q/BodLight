@@ -1,3 +1,7 @@
+body {
+  overflow: hidden;
+}
+
 #bottom-menu-template {
   width: 1920px;
   height: 1080px;
@@ -43,6 +47,10 @@ main h1 {
   margin: 0 0 2vh;
 }
 
+.bordered {
+  border: 6px solid #333;
+}
+
 /* Menu */
 
 nav {
@@ -57,7 +65,7 @@ nav a {
   text-transform: uppercase;
   text-decoration: none;
   font-size: 3.5vh;
-  line-height: 9vh;
+  line-height: 7vh;
   padding: 1vh 0;
   border-bottom: 1vh solid transparent;
 }

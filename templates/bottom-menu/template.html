@@ -13,6 +13,8 @@
   </nav>  
 </div>
 
+<script type="text/javascript" src="../templates/bottom-menu/canvas-to-blob.min.js"></script>
+<script type="text/javascript" src="../templates/bottom-menu/jpeg_camera_no_flash.min.js"></script>
 <script type="text/javascript">
   (()=>{ $(()=>{
     // main menu
@@ -21,6 +23,39 @@
       $(this).closest('nav').find('a').removeClass('current');
       $(this).addClass('current');
       $('#bottom-menu-template main section').removeClass('current').filter(function(){ return $(this).data('name') == name; }).addClass('current');
+      // if changing tabs has made a webcam widget visible, react to that:
+      const webcam = $('#webcam:visible');
+      if(webcam.length > 0 && !webcam.hasClass('activated')){
+        const webcamWrapper = $('#webcam-wrapper');
+        webcam.css({ width: webcam.data('cam-width'), height: webcam.data('cam-height'), background: 'black', position: 'absolute' });
+        const camera = new JpegCamera("#webcam");
+        webcamWrapper.css({ position: 'absolute' });
+        webcam.before(`<div id="webcam-overlay" style="width: ${webcam.data('cam-width')}px; height: ${webcam.data('cam-height')}px; position: absolute; z-index: 10; line-height: ${webcam.data('cam-height')}px; text-align: center; font-size: 200px; color: #ddd; font-weight: bold; opacity: 0.7;"></div>`);
+        const overlay = $('#webcam-overlay');
+        overlay.hide();
+        webcam.data('camera', camera);
+        webcam.addClass('activated');
+        $('#webcam-discard').hide();
+        $('#webcam-capture').on('click', ()=>{
+          $('#webcam-capture').hide();
+          overlay.show().text('3');
+          setTimeout(()=>{ overlay.text('2') }, 1000);
+          setTimeout(()=>{ overlay.text('1') }, 2000);
+          setTimeout(()=>{
+            overlay.hide();
+            const snapshot = camera.capture();
+            webcam.data('snapshot', snapshot);
+            snapshot.show();
+            $('#webcam-discard').show();
+          }, 3000);
+        });
+        $('#webcam-discard').on('click', ()=>{
+          const snapshot = webcam.data('snapshot');
+          snapshot.discard();
+          webcam.removeData('snapshot');
+          $('#webcam-capture, #webcam-discard').toggle();
+        });
+      }
       return false;
     }).first().trigger('click');
   }); })();
