@@ -1,10 +1,10 @@
 {
   "name": "BodLight",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "build": "rm -rf build/*; electron-packager --platform=darwin,linux,win32 --icon=icon.ico --asar=true . BodLight --overwrite --out=build",
+    "build": "rm -rf build/*; electron-packager --platform=darwin,linux,win32 --icon=icon.ico --asar=true . BodLight --overwrite --out=build; cp -r templates build/BodLight-darwin-x64/; cp -r templates build/BodLight-linux-x64/; cp -r templates build/BodLight-win32-x64/",
     "package": "node -e \"var fs = require('fs'); var json = JSON.parse(fs.readFileSync('package.json')); console.log(json.version)\" > build/version; cp build/version build/BodLight-darwin-x64/version; cp build/version build/BodLight-linux-x64/version; cp build/version build/BodLight-win32-x64/version; cd build; rm *.zip; for D in *; do if [ -d \"${D}\" ]; then echo \"${D}\";zip -q1r \"${D}.zip\" \"${D}\"; fi; done; cd ..",
     "deploy": "scp build/*.zip bodl2255@www-prd.bodleian.ox.ac.uk:bodlight/; scp build/version bodl2255@www-prd.bodleian.ox.ac.uk:bodlight/"
   },

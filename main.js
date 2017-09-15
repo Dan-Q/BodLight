@@ -8,7 +8,7 @@ const fs = require('fs');
 
 // Debug (in development mode)
 const electronDebug = require('electron-debug');
-electronDebug();
+electronDebug({enabled: true});
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
