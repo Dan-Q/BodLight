@@ -37,7 +37,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="screen, name in screens" :data-id="name">
+                  <tr v-for="screen, name in screens" :data-id="name" :class="selectedScreen == name ? 'selected' : ''">
                     <td>
                       <span v-if="screen.simulator">
                         <span class="icon icon-record" style="color: transparent"><!-- simulator --></span>
@@ -57,36 +57,39 @@
                 </tbody>
               </table>
               <div id="add-new-screen-form"></div>
+
               <div id="selected-screen" v-show="screens[selectedScreen]">
-                <label class="inline">
-                  <span>Name:</span>
-                  <input type="text" class="form-control" :value="selectedScreen" readonly disabled />
-                </label>
-                <label class="inline">
-                  <span>Display:</span>
-                  <select class="form-control" id="selected-screen-display" data-field-id="display">
-                    <option value=""></option>
-                    <option v-for="display, id in displays" :value="id">{{ display.name }}</option>
-                  </select>
-                  <span></span>
-                  <small>Which Display should be shown on this Screen?</small>
-                </label>
-                <label class="inline">
-                  <span>Resolution:</span>
-                  <div>
-                    <span v-if="screens[selectedScreen] && screens[selectedScreen].resolution">
-                      {{ screens[selectedScreen].resolution.width }} &times; {{ screens[selectedScreen].resolution.height }}
-                    </span>
-                  </div>
-                </label>
-                <label class="inline">
-                  <span>Version:</span>
-                  <div>
-                    <span v-if="screens[selectedScreen] && screens[selectedScreen].version">
-                      {{ screens[selectedScreen].version }}
-                    </span>
-                  </div>
-                </label>
+                <div v-for="screen, name in screens" :data-id="name" v-show="selectedScreen == name">
+                  <label class="inline">
+                    <span>Name:</span>
+                    <input type="text" class="form-control" v-model="name" readonly disabled />
+                  </label>
+                  <label class="inline">
+                    <span>Display:</span>
+                    <select class="form-control" id="selected-screen-display" v-model="screen.display">
+                      <option value=""></option>
+                      <option v-for="display, id in displays" :value="id">{{ display.name }}</option>
+                    </select>
+                    <span></span>
+                    <small>Which Display should be shown on this Screen?</small>
+                  </label>
+                  <label class="inline">
+                    <span>Resolution:</span>
+                    <div>
+                      <span v-if="screen.resolution">
+                        {{ screen.resolution.width }} &times; {{ screen.resolution.height }}
+                      </span>
+                    </div>
+                  </label>
+                  <label class="inline">
+                    <span>Version:</span>
+                    <div>
+                      <span v-if="screen.version">
+                        {{ screen.version }}
+                      </span>
+                    </div>
+                  </label>
+                </div><!-- / v-for screen -->
                 <p>
                   <button class="save btn btn-positive">Save</button>
                   <button class="simulate btn btn-default">Simulate</button>
@@ -95,7 +98,7 @@
                   <button class="reboot cmd btn btn-negative" data-cmd="reboot">Reboot</button>
                   <button class="shut-down cmd btn btn-negative" data-cmd="shut-down">Shut Down</button>
                 </p>
-              </div>
+              </div><!-- / #selected-screen -->
             </div>
 
             <div class="tab-area-section" id="editor-tab-displays-area">
@@ -107,7 +110,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="display, id in displays" :data-id="id">
+                  <tr v-for="display, id in displays" :data-id="id" :class="selectedDisplay == id ? 'selected' : ''">
                     <td>
                       {{ display.name }}
                     </td>
@@ -118,20 +121,22 @@
                 </tbody>
               </table>
               <div id="add-new-display-form"></div>
-              <div id="selected-display" v-show="displays[selectedDisplay]">
-                <label class="inline">
-                  <span>Name:</span>
-                  <input type="text" class="form-control" id="selected-display-name" data-field-id="name" />
-                </label>
-                <label class="inline">
-                  <span>Template:</span>
-                  <input type="text" class="form-control" id="selected-display-template" data-field-id="template" readonly disabled />
-                </label>
+              <div id="selected-display">
+                <div v-for="display, name in displays" :data-id="name" v-show="selectedDisplay == name">
+                  <label class="inline">
+                    <span>Name:</span>
+                    <input type="text" class="form-control" id="selected-display-name" v-model="display.name" />
+                  </label>
+                  <label class="inline">
+                    <span>Template:</span>
+                    <input type="text" class="form-control" id="selected-display-template" v-model="display.template" readonly disabled />
+                  </label>
+                </div><!-- / v-for display in displays -->
                 <div id="selected-display-form"></div>
                 <p>
                   <button class="save btn btn-positive">Save</button>
                 </p>
-              </div>
+              </div><!-- / #selected-display -->
             </div>
 
             <div class="tab-area-section" id="editor-tab-media-area">
@@ -144,7 +149,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="mediaItem, id in mediaItems" :data-id="id">
+                  <tr v-for="mediaItem, id in mediaItems" :data-id="id" :class="selectedMediaItem == id ? 'selected' : ''">
                     <td>{{ id }}</td>
                     <td>{{ mediaItem.name }}</td>
                     <td>{{ mediaItem.contentType }}</td>
@@ -154,8 +159,11 @@
               <div id="add-new-media-form">
                 <button class="btn btn-default" id="add-media">Add Media</button>
               </div>
-              <div id="selected-mediaItem" v-show="mediaItems[selectedMediaItem]">
-                <h2>{{ selectedMediaItem }}</h2>
+              <div id="selected-media-item" v-show="mediaItems[selectedMediaItem]">
+                <div v-for="mediaItem, id in mediaItems" :data-id="id" v-show="selectedMediaItem == id">
+                  <h2>{{ mediaItem.name }}</h2>
+                  <img v-if="mediaItem.contentType.match(/^image\//)" :src="mediaItem.url" />
+                </div>
                 <p>
                   <button class="save btn btn-positive">Save</button>
                 </p>

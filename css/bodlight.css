@@ -58,6 +58,11 @@
 
 /* Editor Page */
 
+tr.selected td,
+tr.selected th {
+  background-color: rgba(255, 255, 0, 0.3);
+}
+
 #editor-tab-screens-area,
 #editor-tab-displays-area,
 #editor-tab-media-area {
@@ -66,9 +71,14 @@
   grid-template: 1fr 1em 1fr / 1fr;
 }
 
-#selected-screen, #selected-display, #selected-mediaItem {
+#selected-screen, #selected-display, #selected-media-item {
   border-top: 1px solid #ddd;
   padding: 0.5em 0.25em;
+}
+
+#selected-media-item img {
+  max-width: 50vw;
+  max-height: 50vh;
 }
 
 label.inline {

@@ -340,34 +340,30 @@ if($('body').hasClass('editor-page')){
     // allow clicking on screens/displays/media tables
     $('body').on('click', '#screens-table tr', function(){
       vueEditorData.selectedScreen = $(this).data('id');
-      $('#selected-screen [data-field-id]').each(function(){
-        $(this).val(vueEditorData.screens[vueEditorData.selectedScreen][$(this).data('field-id')]);
-      });
     });
     $('body').on('click', '#displays-table tr', function(){
       vueEditorData.selectedDisplay = $(this).data('id');
-      $('#selected-display [data-field-id]').each(function(){
-        $(this).val(vueEditorData.displays[vueEditorData.selectedDisplay][$(this).data('field-id')]);
-      });
       let display = vueEditorData.displays[vueEditorData.selectedDisplay];
       let template = templates[display.template];
       $('#selected-display-form').html(template.form).data('return-json', null);
       setTimeout(()=>{ eval(template.formJs); }, 100);
     });
     $('body').on('click', '#media-table tr', function(){
-      vueEditorData.selectedMedia = $(this).data('id');
-      $('#selected-screen [data-field-id]').each(function(){
-        $(this).val(vueEditorData.screens[vueEditorData.selectedScreen][$(this).data('field-id')]);
-      });
+      vueEditorData.selectedMediaItem = $(this).data('id');
     });
 
     // allow saving edited screens
     $('body').on('click', '#selected-screen .save', function(){
-      let params = {};
-      $('#selected-screen [data-field-id]').each(function(){ params[$(this).data('field-id')] = $(this).val(); });
-      db.ref(`screens/${vueEditorData.selectedScreen}`).update(params);
+      const raw = vueEditorData.screens[vueEditorData.selectedScreen];
+      const allowed = ['display']; // parameters allowed to write
+      const filtered = Object.keys(raw)
+        .filter(key => allowed.includes(key)).reduce((obj, key)=> {
+          obj[key] = raw[key];
+          return obj;
+        }, {});
+      db.ref(`screens/${vueEditorData.selectedScreen}`).update(filtered);
     });
-    // allow screens to be send commands
+    // allow screens to be sent commands
     $('body').on('click', '#selected-screen .cmd', function(e){
       db.ref(`screens/${vueEditorData.selectedScreen}/cmd`).set({
         cmd: $(e.target).data('cmd'),
